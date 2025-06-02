@@ -1,0 +1,15 @@
+{
+  "originHash" : "bdcf0a5333a94a294d408e839b2641845ef1fa5b2371e4d31f57d9379c23ddc8",
+  "pins" : [
+    {
+      "identity" : "cubefoundation-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/3sidedcube/cubefoundation-ios/",
+      "state" : {
+        "branch" : "develop",
+        "revision" : "a225538131a35d004cadfec43f52b0ba588e4fca"
+      }
+    }
+  ],
+  "version" : 3
+}
