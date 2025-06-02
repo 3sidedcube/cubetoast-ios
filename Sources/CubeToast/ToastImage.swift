@@ -8,7 +8,8 @@
 import Foundation
 import DeveloperToolsSupport
 
-enum ToastImage {
+/// Image used to illustrate a toast message.
+public enum ToastImage: Equatable {
     case sfSymbol(String)
     case resource(ImageResource)
 }

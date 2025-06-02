@@ -8,20 +8,21 @@
 import SwiftUI
 import CubeFoundationSwiftUI
 
-struct ToastStyle {
-    var backgroundColor: Color
-    var accentColor: Color
-    var textColor: Color
-    var textStyle: TextStyle
-    var cornerRadius: CGFloat
-    var padding: EdgeInsets
-    var imageSize: CGFloat
-    var shadow: FigmaShadow
+/// Visual styling information for a toast message.
+public struct ToastStyle: Equatable {
+    public var backgroundColor: Color
+    public var accentColor: Color
+    public var textColor: Color
+    public var textStyle: TextStyle
+    public var cornerRadius: CGFloat
+    public var padding: EdgeInsets
+    public var imageSize: CGFloat
+    public var shadow: FigmaShadow
 }
 
-extension ToastStyle {
+public extension ToastStyle {
 
-    static var `default`: ToastStyle { .init(
+    static var example: ToastStyle { .init(
         backgroundColor: .black.opacity(0.89),
         accentColor: .orange,
         textColor: .white,
