@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Modifier that presents a toast view over the modified content.
 struct ToastModifier: ViewModifier {
     @Binding var toast: Toast?
     @State private var isPresented = false
@@ -32,6 +33,7 @@ struct ToastModifier: ViewModifier {
         }
     }
 
+    /// Schedules the toast to dismiss after its duration elapses.
     private func scheduleDismiss() {
         guard let duration = toast?.duration else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
@@ -39,6 +41,7 @@ struct ToastModifier: ViewModifier {
         }
     }
 
+    /// Dismisses the toast immediately.
     private func dismiss() {
         withAnimation(.easeIn) {
             isPresented = false
@@ -47,12 +50,16 @@ struct ToastModifier: ViewModifier {
     }
 }
 
+// MARK: - View Extension
+
 public extension View {
     /// Presents a toast bound to the given binding.
     func toast(_ toast: Binding<Toast?>) -> some View {
         modifier(ToastModifier(toast: toast))
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     @Previewable @State var toast: Toast? = nil

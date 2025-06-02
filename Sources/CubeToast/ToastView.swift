@@ -8,12 +8,17 @@
 import SwiftUI
 import CubeFoundationSwiftUI
 
+/// View describing the appearance of a toast message.
 public struct ToastView: View {
 
+    /// Image to be displayed in the toast.
     public let image: ToastImage
+    /// Message text shown to the user.
     public let text: String
+    /// Visual style applied to this view.
     public let style: ToastStyle
 
+    /// Creates a view from a given toast model.
     public init(toast: Toast) {
         image = toast.image
         text = toast.text
@@ -49,6 +54,8 @@ public struct ToastView: View {
     }
 
 }
+
+// MARK: - Preview
 
 #Preview {
     ToastView(toast: .example)

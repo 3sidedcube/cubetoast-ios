@@ -10,15 +10,18 @@ import SwiftUI
 
 /// View that can present toast messages in UIKit.
 public final class ToastContainerView: UIView {
+
     private var hostingController: UIHostingController<ToastView>?
     private var currentToast: Toast?
 
+    /// Creates a new container ready to display toasts.
     public override init(frame: CGRect) {
         super.init(frame: frame)
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .clear
     }
 
+    /// This class does not support interface builder initialisation.
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -74,6 +77,9 @@ public final class ToastContainerView: UIView {
     }
 }
 
+// MARK: - Preview
+
+/// Preview controller showcasing the toast container.
 private class ToastContainerView_Preview: UIViewController {
 
     private let toastContainer = ToastContainerView()

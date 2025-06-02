@@ -1,4 +1,4 @@
-Lightweight Swift Package for Android-style toast notifications on iOS.
+Lightweight Swift Package for toasts. Spiritual successor to MessageStackView.
 
 ## SwiftUI
 
@@ -27,4 +27,3 @@ NSLayoutConstraint.activate([
 ])
 
 toastContainer.show(Toast(image: .sfSymbol("checkmark"), text: "Saved!"))
-```

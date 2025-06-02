@@ -10,18 +10,28 @@ import CubeFoundationSwiftUI
 
 /// Visual styling information for a toast message.
 public struct ToastStyle: Equatable {
+    /// Background colour for the toast view.
     public var backgroundColor: Color
+    /// Accent colour used behind the image.
     public var accentColor: Color
+    /// Colour of the text.
     public var textColor: Color
+    /// Typography used for the message text.
     public var textStyle: TextStyle
+    /// Corner radius applied to the toast.
     public var cornerRadius: CGFloat
+    /// Padding around the toast within its container.
     public var padding: EdgeInsets
+    /// Size of the leading image.
     public var imageSize: CGFloat
+    /// Shadow applied to the toast.
     public var shadow: FigmaShadow
 }
 
-public extension ToastStyle {
+// MARK: - Example
+internal extension ToastStyle {
 
+    /// Default styling used for previews.
     static var example: ToastStyle { .init(
         backgroundColor: .black.opacity(0.89),
         accentColor: .orange,
