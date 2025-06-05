@@ -19,6 +19,8 @@ public final class ToastContainerView: UIView {
         super.init(frame: frame)
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .clear
+        // Allow taps to pass through so the container doesn't block interaction
+        isUserInteractionEnabled = false
     }
 
     /// This class does not support interface builder initialisation.
