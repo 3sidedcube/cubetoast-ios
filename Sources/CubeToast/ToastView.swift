@@ -46,8 +46,7 @@ public struct ToastView: View {
                 .foregroundStyle(style.textColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(style.insets)
         .background(style.backgroundColor, in: .rect(cornerRadius: style.cornerRadius))
         .shadow(style.shadow)
         .padding(style.padding)
