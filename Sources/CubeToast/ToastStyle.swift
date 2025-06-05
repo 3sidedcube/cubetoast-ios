@@ -26,6 +26,26 @@ public struct ToastStyle: Equatable {
     public var imageSize: CGFloat
     /// Shadow applied to the toast.
     public var shadow: FigmaShadow
+
+    public init(
+        backgroundColor: Color,
+        accentColor: Color,
+        textColor: Color,
+        textStyle: TextStyle,
+        cornerRadius: CGFloat,
+        padding: EdgeInsets,
+        imageSize: CGFloat,
+        shadow: FigmaShadow
+    ) {
+        self.backgroundColor = backgroundColor
+        self.accentColor = accentColor
+        self.textColor = textColor
+        self.textStyle = textStyle
+        self.cornerRadius = cornerRadius
+        self.padding = padding
+        self.imageSize = imageSize
+        self.shadow = shadow
+    }
 }
 
 // MARK: - Example
