@@ -46,6 +46,9 @@ public final class ToastContainerView: UIView {
         ])
         hostingController = host
         layoutIfNeeded()
+        
+        UIAccessibility.post(notification: .announcement, argument: toast.text)
+        
         host.view.transform = CGAffineTransform(translationX: 0, y: host.view.bounds.height)
         host.view.alpha = 0
         UIView.animate(withDuration: 0.8,

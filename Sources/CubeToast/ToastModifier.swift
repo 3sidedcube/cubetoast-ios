@@ -22,10 +22,11 @@ struct ToastModifier: ViewModifier {
             }
         }
         .onChange(of: toast) { _, value in
-            if value != nil {
+            if let value {
                 withAnimation(.bouncy(extraBounce: 0.2)) {
                     isPresented = true
                 }
+                AccessibilityNotification.Announcement(value.text).post()
                 scheduleDismiss()
             } else if isPresented {
                 dismiss()
