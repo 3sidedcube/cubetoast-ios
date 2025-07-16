@@ -47,7 +47,7 @@ public final class ToastContainerView: UIView {
         hostingController = host
         layoutIfNeeded()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
             UIAccessibility.post(notification: .announcement, argument: toast.text)
         }
         
