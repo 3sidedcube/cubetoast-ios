@@ -26,7 +26,7 @@ struct ToastModifier: ViewModifier {
                 withAnimation(.bouncy(extraBounce: 0.2)) {
                     isPresented = true
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     AccessibilityNotification.Announcement(value.text).post()
                 }
                 scheduleDismiss()
