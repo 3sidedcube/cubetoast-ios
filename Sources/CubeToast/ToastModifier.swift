@@ -12,6 +12,8 @@ struct ToastModifier: ViewModifier {
     @Binding var toast: Toast?
     @State private var isPresented = false
 
+    @State private var dismissAnimation = false
+
     func body(content: Content) -> some View {
         ZStack(alignment: .bottom) {
             content
@@ -19,6 +21,8 @@ struct ToastModifier: ViewModifier {
                 ToastView(toast: toast)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onTapGesture { dismiss() }
+                    .offset(y: dismissAnimation ? 200 : 0)
+                    .opacity(dismissAnimation ? 0 : 1)
             }
         }
         .onChange(of: toast) { _, value in
@@ -34,6 +38,9 @@ struct ToastModifier: ViewModifier {
                 dismiss()
             }
         }
+        .onDisappear {
+            dismissTimer?.cancel()
+        }
     }
 
     /// Schedules the toast to dismiss after its duration elapses.
@@ -47,9 +54,12 @@ struct ToastModifier: ViewModifier {
     /// Dismisses the toast immediately.
     private func dismiss() {
         withAnimation(.easeIn) {
+            dismissAnimation = true
+        } completion: {
             isPresented = false
+            dismissAnimation = false
+            toast = nil
         }
-        toast = nil
     }
 }
 
