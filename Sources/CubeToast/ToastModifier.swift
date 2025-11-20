@@ -11,7 +11,7 @@ import SwiftUI
 struct ToastModifier: ViewModifier {
     @Binding var toast: Toast?
     @State private var isPresented = false
-
+    @State private var dismissTimer: Task<Void, Never>?
     @State private var dismissAnimation = false
 
     func body(content: Content) -> some View {
@@ -46,7 +46,12 @@ struct ToastModifier: ViewModifier {
     /// Schedules the toast to dismiss after its duration elapses.
     private func scheduleDismiss() {
         guard let duration = toast?.duration else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+
+        // Cancel any existing dismiss timer and start a new one to extend the toast display time.
+        dismissTimer?.cancel()
+        dismissTimer = Task {
+            try? await Task.sleep(for: .seconds(duration))
+            guard !Task.isCancelled else { return }
             dismiss()
         }
     }
