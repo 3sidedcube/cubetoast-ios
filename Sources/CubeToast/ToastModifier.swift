@@ -11,6 +11,8 @@ import SwiftUI
 struct ToastModifier: ViewModifier {
     @Binding var toast: Toast?
     @State private var isPresented = false
+    @State private var dismissTimer: Task<Void, Never>?
+    @State private var dismissAnimation = false
 
     func body(content: Content) -> some View {
         ZStack(alignment: .bottom) {
@@ -19,6 +21,8 @@ struct ToastModifier: ViewModifier {
                 ToastView(toast: toast)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onTapGesture { dismiss() }
+                    .offset(y: dismissAnimation ? 200 : 0)
+                    .opacity(dismissAnimation ? 0 : 1)
             }
         }
         .onChange(of: toast) { _, value in
@@ -34,12 +38,20 @@ struct ToastModifier: ViewModifier {
                 dismiss()
             }
         }
+        .onDisappear {
+            dismissTimer?.cancel()
+        }
     }
 
     /// Schedules the toast to dismiss after its duration elapses.
     private func scheduleDismiss() {
         guard let duration = toast?.duration else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+
+        // Cancel any existing dismiss timer and start a new one to extend the toast display time.
+        dismissTimer?.cancel()
+        dismissTimer = Task {
+            try? await Task.sleep(for: .seconds(duration))
+            guard !Task.isCancelled else { return }
             dismiss()
         }
     }
@@ -47,9 +59,12 @@ struct ToastModifier: ViewModifier {
     /// Dismisses the toast immediately.
     private func dismiss() {
         withAnimation(.easeIn) {
+            dismissAnimation = true
+        } completion: {
             isPresented = false
+            dismissAnimation = false
+            toast = nil
         }
-        toast = nil
     }
 }
 
