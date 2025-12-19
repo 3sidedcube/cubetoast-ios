@@ -40,6 +40,7 @@ struct ToastModifier: ViewModifier {
         }
         .onDisappear {
             dismissTimer?.cancel()
+            dismiss()
         }
     }
 
