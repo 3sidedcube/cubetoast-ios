@@ -19,6 +19,7 @@ struct ToastModifier: ViewModifier {
             content
             if let toast = toast, isPresented {
                 ToastView(toast: toast)
+                    .zIndex(1)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onTapGesture { dismiss() }
                     .offset(y: dismissAnimation ? 200 : 0)
