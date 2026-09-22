@@ -22,6 +22,9 @@ public struct ToastView: View {
     /// Called when the action asks for the toast to be dismissed.
     var onDismissRequested: (() -> Void)?
 
+    /// Smallest comfortable tap target (HIG).
+    private static let minimumHitHeight: CGFloat = 44
+
     /// Creates a view from a given toast model.
     public init(toast: Toast) {
         image = toast.image
@@ -88,7 +91,10 @@ private extension ToastView {
             action.label()
                 .style(style.textStyle)
                 .foregroundStyle(style.textColor)
-                .frame(minHeight: style.imageSize)
+                .fixedSize(horizontal: true, vertical: false)
+                // A 44pt tap target that lays out at the icon's height, so the row stays as tall as the icon.
+                .frame(minHeight: Self.minimumHitHeight)
+                .padding(.vertical, min(0, (style.imageSize - Self.minimumHitHeight) / 2))
         }
         .buttonStyle(.plain)
     }
