@@ -17,15 +17,33 @@ public struct ToastView: View {
     public let text: String
     /// Visual style applied to this view.
     public let style: ToastStyle
+    /// Optional trailing action.
+    public let action: ToastAction?
+    /// Called when the action asks for the toast to be dismissed.
+    var onDismissRequested: (() -> Void)?
 
     /// Creates a view from a given toast model.
     public init(toast: Toast) {
         image = toast.image
         text = toast.text
         style = toast.style
+        action = toast.action
+    }
+
+    init(toast: Toast, onDismissRequested: @escaping () -> Void) {
+        self.init(toast: toast)
+        self.onDismissRequested = onDismissRequested
     }
 
     public var body: some View {
+        if action?.isDismiss == true {
+            row.accessibilityAction(.escape) { onDismissRequested?() }
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
         HStack(spacing: 12) {
             Group {
                 switch image {
@@ -45,13 +63,35 @@ public struct ToastView: View {
                 .style(style.textStyle)
                 .foregroundStyle(style.textColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let action {
+                actionLink(action)
+            }
         }
         .padding(style.insets)
         .background(style.backgroundColor, in: .rect(cornerRadius: style.cornerRadius))
         .shadow(style.shadow)
         .padding(style.padding)
     }
+}
 
+// MARK: - Private
+
+private extension ToastView {
+    func actionLink(_ action: ToastAction) -> some View {
+        Button {
+            action.handler()
+            if action.dismissesOnTap {
+                onDismissRequested?()
+            }
+        } label: {
+            action.label()
+                .style(style.textStyle)
+                .foregroundStyle(style.textColor)
+                .frame(minHeight: style.imageSize)
+        }
+        .buttonStyle(.plain)
+    }
 }
 
 // MARK: - Preview
