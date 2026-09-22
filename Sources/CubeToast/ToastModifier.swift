@@ -13,35 +13,34 @@ struct ToastModifier: ViewModifier {
     @State private var isPresented = false
     @State private var dismissTimer: Task<Void, Never>?
     @State private var dismissAnimation = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var motion: ToastMotion { ToastMotion(reduceMotion: reduceMotion) }
 
     func body(content: Content) -> some View {
         ZStack(alignment: .bottom) {
             content
             if let toast = toast, isPresented {
-                ToastView(toast: toast)
+                ToastView(toast: toast) { dismiss(reason: .userTap) }
+                    .toastPresentation(toast) { dismiss(reason: $0) }
                     .zIndex(1)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .onTapGesture { dismiss() }
-                    .offset(y: dismissAnimation ? 200 : 0)
+                    .offset(y: dismissAnimation ? motion.exitOffset : 0)
                     .opacity(dismissAnimation ? 0 : 1)
             }
         }
         .onChange(of: toast) { _, value in
             if let value {
-                withAnimation(.bouncy(extraBounce: 0.2)) {
+                withAnimation(motion.entrance) {
                     isPresented = true
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                    AccessibilityNotification.Announcement(value.text).post()
                 }
                 scheduleDismiss()
             } else if isPresented {
-                dismiss()
+                dismiss(reason: .programmatic)
             }
         }
         .onDisappear {
             dismissTimer?.cancel()
-            dismiss()
+            dismiss(reason: .programmatic)
         }
     }
 
@@ -54,18 +53,20 @@ struct ToastModifier: ViewModifier {
         dismissTimer = Task {
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled else { return }
-            dismiss()
+            dismiss(reason: .timer)
         }
     }
 
     /// Dismisses the toast immediately.
-    private func dismiss() {
-        withAnimation(.easeIn) {
+    private func dismiss(reason: ToastQueue.DismissReason) {
+        let dismissed = toast
+        withAnimation(motion.exit) {
             dismissAnimation = true
         } completion: {
             isPresented = false
             dismissAnimation = false
             toast = nil
+            dismissed?.onDismiss?(reason)
         }
     }
 }

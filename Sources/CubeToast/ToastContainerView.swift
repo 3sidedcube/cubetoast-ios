@@ -11,16 +11,22 @@ import SwiftUI
 /// View that can present toast messages in UIKit.
 public final class ToastContainerView: UIView {
 
-    private var hostingController: UIHostingController<ToastView>?
+    private var hostingController: UIHostingController<HostedToast>?
     private var currentToast: Toast?
+
+    /// Height of the toast on screen, including its padding.
+    var visibleToastHeight: CGFloat {
+        hostingController?.view.bounds.height ?? 0
+    }
+
+    /// Receives taps on the toast; when unset the container dismisses it.
+    var onInteraction: ((Toast, ToastQueue.DismissReason) -> Void)?
 
     /// Creates a new container ready to display toasts.
     public override init(frame: CGRect) {
         super.init(frame: frame)
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .clear
-        // Allow taps to pass through so the container doesn't block interaction
-        isUserInteractionEnabled = false
     }
 
     /// This class does not support interface builder initialisation.
@@ -28,12 +34,22 @@ public final class ToastContainerView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Only the toast takes touches; the rest falls through.
+    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        return hit === self ? nil : hit
+    }
+
     /// Presents the given toast.
     public func show(_ toast: Toast) {
         dismissCurrent()
         currentToast = toast
 
-        let view = ToastView(toast: toast)
+        let view = HostedToast(
+            toast: toast,
+            onTap: { [weak self] in self?.handleInteraction(.userTap) },
+            onDismissRequested: { [weak self] in self?.handleInteraction(.userTap) }
+        )
         let host = UIHostingController(rootView: view)
         host.view.translatesAutoresizingMaskIntoConstraints = false
         host.view.backgroundColor = .clear
@@ -46,41 +62,72 @@ public final class ToastContainerView: UIView {
         ])
         hostingController = host
         layoutIfNeeded()
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            UIAccessibility.post(notification: .announcement, argument: toast.text)
+
+        toast.announce()
+
+        let motion = ToastMotion.current
+        if motion.slidesOnEntrance {
+            host.view.transform = CGAffineTransform(translationX: 0, y: host.view.bounds.height)
         }
-        
-        host.view.transform = CGAffineTransform(translationX: 0, y: host.view.bounds.height)
         host.view.alpha = 0
-        UIView.animate(withDuration: 0.8,
-                       delay: 0,
-                       usingSpringWithDamping: 0.6,
-                       initialSpringVelocity: 0.5,
-                       options: [],
-                       animations: {
+        motion.animateEntrance {
             host.view.transform = .identity
             host.view.alpha = 1
-        })
+        }
 
         if let duration = toast.duration {
             DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
-                self?.dismissCurrent()
+                guard self?.currentToast?.id == toast.id else { return }
+                self?.dismissCurrent(reason: .timer)
             }
         }
     }
 
     /// Dismisses any currently displayed toast.
     public func dismissCurrent() {
+        dismissCurrent(reason: .programmatic)
+    }
+}
+
+// MARK: - Private
+
+private extension ToastContainerView {
+    func dismissCurrent(reason: ToastQueue.DismissReason) {
         guard let host = hostingController else { return }
-        UIView.animate(withDuration: 0.5, animations: {
-            host.view.transform = CGAffineTransform(translationX: 0, y: host.view.bounds.height)
+        let toast = currentToast
+        let motion = ToastMotion.current
+        motion.animateExit({
+            if motion.slidesOnEntrance {
+                host.view.transform = CGAffineTransform(translationX: 0, y: host.view.bounds.height)
+            }
             host.view.alpha = 0
-        }, completion: { _ in
+        }, completion: {
             host.view.removeFromSuperview()
         })
         hostingController = nil
         currentToast = nil
+        toast?.onDismiss?(reason)
+    }
+
+    func handleInteraction(_ reason: ToastQueue.DismissReason) {
+        guard let toast = currentToast else { return }
+        if let onInteraction {
+            onInteraction(toast, reason)
+        } else {
+            dismissCurrent(reason: reason)
+        }
+    }
+}
+
+/// The toast view with its tap wired to the container.
+struct HostedToast: View {
+    let toast: Toast
+    let onTap: () -> Void
+    let onDismissRequested: () -> Void
+
+    var body: some View {
+        ToastView(toast: toast, onDismissRequested: onDismissRequested)
+            .onTapGesture(perform: onTap)
     }
 }
 
