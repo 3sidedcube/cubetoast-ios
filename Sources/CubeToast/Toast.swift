@@ -30,6 +30,8 @@ public struct Toast: Identifiable, Equatable {
 
     /// Creates a new toast.
     /// - Parameters:
+    ///   - id: Identity of the toast. A fixed id lets several callers show the same toast and have the
+    ///     queue keep one, or dismiss it later without holding the value.
     ///   - image: The image to show with the message.
     ///   - text: The message text.
     ///   - style: The visual style for the toast.
@@ -38,6 +40,7 @@ public struct Toast: Identifiable, Equatable {
     ///   - announcementPriority: VoiceOver priority. Defaults to `.low`.
     ///   - onDismiss: Called once when the toast is dismissed.
     public init(
+        id: UUID = UUID(),
         image: ToastImage,
         text: String,
         style: ToastStyle,
@@ -46,7 +49,7 @@ public struct Toast: Identifiable, Equatable {
         announcementPriority: UIAccessibilityPriority = .low,
         onDismiss: (@MainActor (ToastQueue.DismissReason) -> Void)? = nil
     ) {
-        self.id = UUID()
+        self.id = id
         self.image = image
         self.text = text
         self.duration = duration
