@@ -9,6 +9,9 @@ import SwiftUI
 import UIKit
 
 /// Transparent `.alert`-level window that stacks toasts above every modal presentation.
+///
+/// The window lays its toasts out: `bottomInset`, `leadingInset` and `trailingInset` place the stack, so a
+/// hosted toast's `style.padding` applies vertically only.
 public final class ToastWindow: UIWindow {
 
     /// The queue behind the window's toasts.
@@ -21,7 +24,19 @@ public final class ToastWindow: UIWindow {
         didSet { stackBottom.constant = -bottomInset }
     }
 
+    /// Distance the toasts keep from the leading edge.
+    public var leadingInset: CGFloat = 0 {
+        didSet { stackLeading.constant = leadingInset }
+    }
+
+    /// Distance the toasts keep from the trailing edge.
+    public var trailingInset: CGFloat = 0 {
+        didSet { stackTrailing.constant = -trailingInset }
+    }
+
     private let stackBottom: NSLayoutConstraint
+    private let stackLeading: NSLayoutConstraint
+    private let stackTrailing: NSLayoutConstraint
 
     /// Creates a visible window on the scene for the given queue.
     public init(windowScene: UIWindowScene, queue: ToastQueue = ToastQueue()) {
@@ -29,6 +44,8 @@ public final class ToastWindow: UIWindow {
         self.stack = stack
         let root = ToastWindowRootViewController()
         stackBottom = stack.bottomAnchor.constraint(equalTo: root.view.bottomAnchor)
+        stackLeading = stack.leadingAnchor.constraint(equalTo: root.view.leadingAnchor)
+        stackTrailing = stack.trailingAnchor.constraint(equalTo: root.view.trailingAnchor)
         super.init(windowScene: windowScene)
         windowLevel = .alert
         backgroundColor = .clear
@@ -38,8 +55,8 @@ public final class ToastWindow: UIWindow {
         root.view.addSubview(stack)
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: root.view.topAnchor),
-            stack.leadingAnchor.constraint(equalTo: root.view.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: root.view.trailingAnchor),
+            stackLeading,
+            stackTrailing,
             stackBottom
         ])
     }
@@ -145,10 +162,13 @@ private extension ToastStackView {
         bottomConstraints[toast.id] = bottom
         layoutIfNeeded()
 
-        // The queue owns timing and the dismiss callback; the container only draws.
+        // The queue owns timing and the dismiss callback; the container only draws. The stack's owner
+        // places it horizontally (see `ToastWindow`), so the style's side padding does not apply here.
         var hosted = toast
         hosted.duration = nil
         hosted.onDismiss = nil
+        hosted.style.padding.leading = 0
+        hosted.style.padding.trailing = 0
         container.show(hosted)
     }
 
