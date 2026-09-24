@@ -41,8 +41,15 @@ public final class ToastQueue {
     /// Creates an empty queue.
     public init() {}
 
-    /// Shows the toast, or queues it when the cap is reached.
+    /// Shows the toast, or queues it when the cap is reached. Showing a toast whose id is already visible
+    /// refreshes it in place and restarts its timer.
     public func show(_ toast: Toast) {
+        if let index = visible.firstIndex(where: { $0.id == toast.id }) {
+            visible[index] = toast
+            scheduleDismissal(of: toast)
+            onChange?()
+            return
+        }
         guard !contains(toast.id) else { return }
         if hasCapacity(for: toast) {
             admit(toast)
@@ -111,6 +118,12 @@ private extension ToastQueue {
 
     func admit(_ toast: Toast) {
         visible.insert(toast, at: 0)
+        scheduleDismissal(of: toast)
+    }
+
+    func scheduleDismissal(of toast: Toast) {
+        timers[toast.id]?.cancel()
+        timers[toast.id] = nil
         guard let duration = toast.duration else { return }
         timers[toast.id] = Task { [weak self] in
             try? await Task.sleep(for: .seconds(duration))
