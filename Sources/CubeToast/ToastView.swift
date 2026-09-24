@@ -22,6 +22,8 @@ public struct ToastView: View {
     /// Called when the action asks for the toast to be dismissed.
     var onDismissRequested: (() -> Void)?
 
+    @Environment(\.toastAppliesSidePadding) private var appliesSidePadding
+
     /// Smallest comfortable tap target (HIG).
     private static let minimumHitHeight: CGFloat = 44
 
@@ -74,7 +76,26 @@ public struct ToastView: View {
         .padding(style.insets)
         .background(style.backgroundColor, in: .rect(cornerRadius: style.cornerRadius))
         .shadow(style.shadow)
-        .padding(style.padding)
+        .padding(appliesSidePadding ? style.padding : style.verticalPadding)
+    }
+}
+
+private extension ToastStyle {
+    /// `padding` with the sides zeroed, for a host that positions the toast horizontally itself.
+    var verticalPadding: EdgeInsets {
+        EdgeInsets(top: padding.top, leading: 0, bottom: padding.bottom, trailing: 0)
+    }
+}
+
+private struct ToastAppliesSidePaddingKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    /// Whether a toast applies its style's side padding. A host that positions the stack itself turns it off.
+    var toastAppliesSidePadding: Bool {
+        get { self[ToastAppliesSidePaddingKey.self] }
+        set { self[ToastAppliesSidePaddingKey.self] = newValue }
     }
 }
 
