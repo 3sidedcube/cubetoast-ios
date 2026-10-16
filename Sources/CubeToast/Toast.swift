@@ -66,6 +66,14 @@ public struct Toast: Identifiable, Equatable {
 }
 
 extension Toast {
+    /// How long the toast stays before dismissing itself, or `nil` when it stays until dismissed.
+    ///
+    /// A toast with an action stays while VoiceOver is running. VoiceOver hears the announcement but not the action,
+    /// and reaching it can take longer than the timer, or wait on a modal such as a tip being closed first.
+    @MainActor var displayDuration: TimeInterval? {
+        action != nil && UIAccessibility.isVoiceOverRunning ? nil : duration
+    }
+
     /// Announces the text to VoiceOver after the entrance animation.
     @MainActor
     func announce() {

@@ -112,8 +112,8 @@ public final class ToastQueue {
 
 private extension ToastQueue {
     func hasCapacity(for toast: Toast) -> Bool {
-        guard let maximumVisible, toast.duration != nil else { return true }
-        return visible.filter { $0.duration != nil }.count < maximumVisible
+        guard let maximumVisible, toast.displayDuration != nil else { return true }
+        return visible.filter { $0.displayDuration != nil }.count < maximumVisible
     }
 
     func admit(_ toast: Toast) {
@@ -124,7 +124,7 @@ private extension ToastQueue {
     func scheduleDismissal(of toast: Toast) {
         timers[toast.id]?.cancel()
         timers[toast.id] = nil
-        guard let duration = toast.duration else { return }
+        guard let duration = toast.displayDuration else { return }
         timers[toast.id] = Task { [weak self] in
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled, let self else { return }

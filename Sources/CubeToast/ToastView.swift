@@ -41,7 +41,9 @@ public struct ToastView: View {
     }
 
     public var body: some View {
-        if action?.isDismiss == true {
+        // Any toast the user can tap away also leaves with the escape gesture. A toast with an action stays
+        // while VoiceOver is running (`Toast.displayDuration`), so this closes it without taking the action.
+        if onDismissRequested != nil {
             row.accessibilityAction(.escape) { onDismissRequested?() }
         } else {
             row
@@ -63,6 +65,9 @@ public struct ToastView: View {
             }
             .frame(size: style.imageSize)
             .background(style.accentColor, in: .circle)
+            // Decorative: the text carries the message, and a resource image is otherwise read out by its
+            // asset name ("infoToastIcon").
+            .accessibilityHidden(true)
 
             Text(text)
                 .style(style.textStyle)
@@ -115,6 +120,8 @@ private extension ToastView {
                 .fixedSize(horizontal: true, vertical: false)
                 // A 44pt tap target that lays out at the icon's height, so the row stays as tall as the icon.
                 .frame(minHeight: Self.minimumHitHeight)
+                // The whole 44pt frame takes the tap and is what VoiceOver reports, not only the label's glyphs.
+                .contentShape([.interaction, .accessibility], .rect)
                 .padding(.vertical, min(0, (style.imageSize - Self.minimumHitHeight) / 2))
         }
         .buttonStyle(.plain)

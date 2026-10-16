@@ -46,7 +46,7 @@ struct ToastModifier: ViewModifier {
 
     /// Schedules the toast to dismiss after its duration elapses.
     private func scheduleDismiss() {
-        guard let duration = toast?.duration else { return }
+        guard let duration = toast?.displayDuration else { return }
 
         // Cancel any existing dismiss timer and start a new one to extend the toast display time.
         dismissTimer?.cancel()
