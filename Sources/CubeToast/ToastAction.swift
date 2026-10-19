@@ -15,8 +15,6 @@ public struct ToastAction {
     public let handler: @MainActor () -> Void
     /// The label to draw, in the toast's text colour and style.
     let label: () -> AnyView
-    /// Marks `.dismiss`, which also gets the VoiceOver escape gesture.
-    var isDismiss = false
 
     /// Creates an action.
     /// - Parameters:
@@ -35,10 +33,8 @@ public struct ToastAction {
 
     /// An action that only dismisses the toast, drawn as an underlined link.
     public static func dismiss(title: String = "Dismiss") -> ToastAction {
-        var action = ToastAction(handler: {}) {
+        ToastAction(handler: {}) {
             Text(title).underline()
         }
-        action.isDismiss = true
-        return action
     }
 }

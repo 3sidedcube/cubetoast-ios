@@ -75,7 +75,7 @@ public final class ToastContainerView: UIView {
             host.view.alpha = 1
         }
 
-        if let duration = toast.duration {
+        if let duration = toast.displayDuration {
             DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
                 guard self?.currentToast?.id == toast.id else { return }
                 self?.dismissCurrent(reason: .timer)
