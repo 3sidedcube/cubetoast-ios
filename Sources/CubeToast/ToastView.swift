@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import CubeFoundationSwiftUI
 
 /// View describing the appearance of a toast message.
@@ -21,11 +22,18 @@ public struct ToastView: View {
     public let action: ToastAction?
     /// Called when the action asks for the toast to be dismissed.
     var onDismissRequested: (() -> Void)?
+    /// Whether VoiceOver moves onto the message as the toast appears (`Toast.focusesVoiceOver`).
+    private let focusesVoiceOver: Bool
+    /// The showing this view draws; a new one moves VoiceOver back onto a toast refreshed in place.
+    private let presentationID: UUID
 
     @Environment(\.toastAppliesSidePadding) private var appliesSidePadding
+    @AccessibilityFocusState private var isMessageFocused: Bool
 
     /// Smallest comfortable tap target (HIG).
     private static let minimumHitHeight: CGFloat = 44
+    /// Time for the entrance to settle before VoiceOver moves on, so its outline lands on the toast in its place.
+    private static let voiceOverFocusDelay: Duration = .seconds(0.5)
 
     /// Creates a view from a given toast model.
     public init(toast: Toast) {
@@ -33,6 +41,8 @@ public struct ToastView: View {
         text = toast.text
         style = toast.style
         action = toast.action
+        focusesVoiceOver = toast.focusesVoiceOver
+        presentationID = toast.presentationID
     }
 
     init(toast: Toast, onDismissRequested: @escaping () -> Void) {
@@ -73,6 +83,7 @@ public struct ToastView: View {
                 .style(style.textStyle)
                 .foregroundStyle(style.textColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityFocused($isMessageFocused)
 
             if let action {
                 actionLink(action)
@@ -82,6 +93,7 @@ public struct ToastView: View {
         .background(style.backgroundColor, in: .rect(cornerRadius: style.cornerRadius))
         .shadow(style.shadow)
         .padding(appliesSidePadding ? style.padding : style.verticalPadding)
+        .task(id: presentationID) { await focusVoiceOverIfNeeded() }
     }
 }
 
@@ -107,6 +119,15 @@ extension EnvironmentValues {
 // MARK: - Private
 
 private extension ToastView {
+    /// Moves VoiceOver onto the message, for a toast that takes focus rather than being announced. The message
+    /// rather than the row, so an action stays its own stop after it.
+    func focusVoiceOverIfNeeded() async {
+        guard focusesVoiceOver, UIAccessibility.isVoiceOverRunning else { return }
+        try? await Task.sleep(for: Self.voiceOverFocusDelay)
+        guard !Task.isCancelled else { return }
+        isMessageFocused = true
+    }
+
     func actionLink(_ action: ToastAction) -> some View {
         Button {
             action.handler()

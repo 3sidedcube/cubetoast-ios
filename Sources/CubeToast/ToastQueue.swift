@@ -45,7 +45,9 @@ public final class ToastQueue {
     /// refreshes it in place and restarts its timer.
     public func show(_ toast: Toast) {
         if let index = visible.firstIndex(where: { $0.id == toast.id }) {
-            visible[index] = toast
+            var refreshed = toast
+            refreshed.presentationID = UUID()
+            visible[index] = refreshed
             scheduleDismissal(of: toast)
             onChange?()
             return

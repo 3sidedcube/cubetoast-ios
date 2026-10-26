@@ -25,8 +25,14 @@ public struct Toast: Identifiable, Equatable {
     public var action: ToastAction?
     /// VoiceOver priority of the announcement.
     public var announcementPriority: UIAccessibilityPriority
+    /// Whether VoiceOver moves onto the toast as it appears, instead of hearing it announced. For a toast that
+    /// confirms the user's own action, where whatever VoiceOver would read next is out of date.
+    public var focusesVoiceOver: Bool
     /// Called once when the toast is dismissed.
     public var onDismiss: (@MainActor (ToastQueue.DismissReason) -> Void)?
+
+    /// New each time the toast is shown, a refresh in place included, so a refreshed toast takes VoiceOver again.
+    var presentationID = UUID()
 
     /// Creates a new toast.
     /// - Parameters:
@@ -38,6 +44,7 @@ public struct Toast: Identifiable, Equatable {
     ///   - duration: Optional auto-dismiss duration. Defaults to three seconds.
     ///   - action: Optional trailing action.
     ///   - announcementPriority: VoiceOver priority. Defaults to `.low`.
+    ///   - focusesVoiceOver: Whether VoiceOver moves onto the toast instead of announcing it. Defaults to `false`.
     ///   - onDismiss: Called once when the toast is dismissed.
     public init(
         id: UUID = UUID(),
@@ -47,6 +54,7 @@ public struct Toast: Identifiable, Equatable {
         duration: TimeInterval? = 3.0,
         action: ToastAction? = nil,
         announcementPriority: UIAccessibilityPriority = .low,
+        focusesVoiceOver: Bool = false,
         onDismiss: (@MainActor (ToastQueue.DismissReason) -> Void)? = nil
     ) {
         self.id = id
@@ -56,6 +64,7 @@ public struct Toast: Identifiable, Equatable {
         self.style = style
         self.action = action
         self.announcementPriority = announcementPriority
+        self.focusesVoiceOver = focusesVoiceOver
         self.onDismiss = onDismiss
     }
 
@@ -74,9 +83,11 @@ extension Toast {
         action != nil && UIAccessibility.isVoiceOverRunning ? nil : duration
     }
 
-    /// Announces the text to VoiceOver after the entrance animation.
+    /// Announces the text to VoiceOver after the entrance animation. A toast that takes VoiceOver's focus is read
+    /// out from there instead (`ToastView`), and announcing it too would read it twice.
     @MainActor
     func announce() {
+        guard !focusesVoiceOver else { return }
         let announcement = NSAttributedString(
             string: text,
             attributes: [.accessibilitySpeechAnnouncementPriority: announcementPriority.rawValue]
