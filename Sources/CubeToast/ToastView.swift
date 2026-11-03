@@ -32,8 +32,9 @@ public struct ToastView: View {
 
     /// Smallest comfortable tap target (HIG).
     private static let minimumHitHeight: CGFloat = 44
-    /// Time for the entrance to settle before VoiceOver moves on, so its outline lands on the toast in its place.
-    private static let voiceOverFocusDelay: Duration = .seconds(0.5)
+    /// How long after the toast claims VoiceOver's focus a move elsewhere counts as VoiceOver's own pick (a sheet
+    /// closing lands one about 0.4s later) rather than the user swiping away.
+    private static let focusGuardWindow: Duration = .seconds(1)
 
     /// Creates a view from a given toast model.
     public init(toast: Toast) {
@@ -120,12 +121,32 @@ extension EnvironmentValues {
 
 private extension ToastView {
     /// Moves VoiceOver onto the message, for a toast that takes focus rather than being announced. The message
-    /// rather than the row, so an action stays its own stop after it.
+    /// rather than the row, so an action stays its own stop after it. Straight away: until it lands, VoiceOver reads
+    /// whatever the user's action changed under it.
     func focusVoiceOverIfNeeded() async {
         guard focusesVoiceOver, UIAccessibility.isVoiceOverRunning else { return }
-        try? await Task.sleep(for: Self.voiceOverFocusDelay)
-        guard !Task.isCancelled else { return }
         isMessageFocused = true
+        await reclaimFocusIfTaken()
+    }
+
+    /// Takes VoiceOver's focus back, once, if VoiceOver moves it elsewhere within `focusGuardWindow`, e.g. its own
+    /// pick as a sheet closes under the toast.
+    func reclaimFocusIfTaken() async {
+        let focusMoves = NotificationCenter.default
+            .notifications(named: UIAccessibility.elementFocusedNotification)
+            .map { _ in }
+        let watch = Task { @MainActor in
+            for await _ in focusMoves {
+                guard let focused = UIAccessibility.focusedElement(using: .notificationVoiceOver) as? NSObject else { continue }
+                if focused.accessibilityLabel == text { return }
+                isMessageFocused = false
+                await Task.yield()
+                isMessageFocused = true
+                return
+            }
+        }
+        try? await Task.sleep(for: Self.focusGuardWindow)
+        watch.cancel()
     }
 
     func actionLink(_ action: ToastAction) -> some View {
